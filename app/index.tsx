@@ -1,9 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
-import { Button, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 export default function PushApp() {
-  const { expoPushToken, sendPushNotification } = usePushNotifications();
+  const { expoPushToken, notifications } = usePushNotifications();
 
   return (
     <View
@@ -11,7 +11,44 @@ export default function PushApp() {
     >
       <ThemedText>Expo push token: {expoPushToken}</ThemedText>
 
-      <Button
+      <FlatList
+        renderItem={({ item }) => (
+          <View style={{ paddingVertical: 10 }}>
+            <ThemedText style={{ fontWeight: "bold" }}>
+              {item.request.content.title}
+            </ThemedText>
+            <ThemedText>{item.request.content.body}</ThemedText>
+            <ThemedText>
+              {JSON.stringify(item.request.content.data, null, 2)}
+            </ThemedText>
+          </View>
+        )}
+        data={notifications}
+        keyExtractor={(item) => item.request.identifier}
+        ItemSeparatorComponent={() => (
+          <View
+            style={{ height: 1, backgroundColor: "grey", opacity: 0.5 }}
+          ></View>
+        )}
+        ListEmptyComponent={() => (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingVertical: 20,
+            }}
+          >
+            <ThemedText
+              style={{ textAlign: "center", fontSize: 16, color: "grey" }}
+            >
+              No hay notificaciones
+            </ThemedText>
+          </View>
+        )}
+      />
+
+      {/* <Button
         title="Press to Send Notification"
         onPress={async () => {
           await sendPushNotification({
@@ -23,7 +60,7 @@ export default function PushApp() {
             },
           });
         }}
-      />
+      /> */}
     </View>
   );
 }
