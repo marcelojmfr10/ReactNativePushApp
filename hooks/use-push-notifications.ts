@@ -1,5 +1,6 @@
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
+import { router, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -88,6 +89,8 @@ async function registerForPushNotificationsAsync() {
 }
 
 export const usePushNotifications = () => {
+  const [pendingChatId, setPendingChatId] = useState<string | null>("");
+  const rootNavigationState = useRootNavigationState();
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notifications, setNotifications] = useState<
     Notifications.Notification[]
@@ -111,17 +114,36 @@ export const usePushNotifications = () => {
 
     const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("addNotificationResponseReceivedListener");
-        console.log(response);
+        const chatId = response.notification.request.content.data?.chatId;
+
+        if (typeof chatId === "string" && chatId.length > 0) {
+          setPendingChatId(chatId);
+        }
       });
 
-    // TODO: implementar función cuando la app está terminada
+    const handleInitialNotificationResponse = () => {
+      const response = Notifications.getLastNotificationResponse();
+      const chatId = response?.notification?.request?.content?.data?.chatId;
+      if (typeof chatId === "string" && chatId.length > 0) {
+        setPendingChatId(chatId);
+      }
+    };
+
+    handleInitialNotificationResponse();
 
     return () => {
       notificationListener.remove();
       responseListener.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (!rootNavigationState.key) return;
+    if (!pendingChatId) return;
+
+    router.push(`/chat/${pendingChatId}`);
+    setPendingChatId(null);
+  }, [pendingChatId, rootNavigationState?.key]);
 
   return { expoPushToken, notifications, sendPushNotification };
 };
