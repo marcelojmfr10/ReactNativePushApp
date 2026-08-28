@@ -1,5 +1,6 @@
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -113,6 +114,11 @@ export const usePushNotifications = () => {
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log("addNotificationResponseReceivedListener");
         console.log(response);
+        const chatId = response.notification.request.content.data?.chatId;
+
+        if (chatId) {
+          router.push(`/chat/${chatId}`);
+        }
       });
 
     // TODO: implementar función cuando la app está terminada
